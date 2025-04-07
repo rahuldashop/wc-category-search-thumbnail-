@@ -1,4 +1,3 @@
-# wc-category-search-thumbnail-
 <?php
 /**
  * Plugin Name: WooCommerce Category Search + Thumbnail Enhancer
