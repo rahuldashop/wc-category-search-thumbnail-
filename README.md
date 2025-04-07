@@ -1,0 +1,1 @@
+# wc-category-search-thumbnail-
