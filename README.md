@@ -2,12 +2,12 @@
 <?php
 /**
  * Plugin Name: WooCommerce Category Search + Thumbnail Enhancer
- * Description: Adds search boxes and category thumbnails to Product Editor and Quick Edit for WooCommerce.
+ * Description: Adds live search and thumbnail images to category selector in WooCommerce Product Editor and Quick Edit.
  * Version: 1.1
  * Author: ChatGPT
  */
 
-// Add search + thumbnail to Product Editor
+// ========== Product Editor: Category Search + Thumbnails ==========
 add_action('admin_print_footer_scripts', 'wc_cat_search_thumbnail_product_editor');
 function wc_cat_search_thumbnail_product_editor() {
     global $pagenow;
@@ -29,53 +29,53 @@ function wc_cat_search_thumbnail_product_editor() {
         }
     </style>
     <script>
-        jQuery(document).ready(function($) {
-            var categoryBox = $('#product_catdiv .inside');
-            if (!categoryBox.length) return;
+    jQuery(document).ready(function($) {
+        var categoryBox = $('#product_catdiv .inside');
+        if (!categoryBox.length) return;
 
-            categoryBox.prepend('<input type="text" class="category-search" placeholder="ক্যাটেগরি সার্চ করুন..."/>            <button type="button" class="button clear-category-search">Clear Search</button>');
+        categoryBox.prepend('<input type="text" class="category-search" placeholder="ক্যাটেগরি সার্চ করুন..."/><button type="button" class="button clear-category-search">Clear Search</button>');
 
-            var debounceTimeout;
-            $('.category-search').on('keyup', function() {
-                clearTimeout(debounceTimeout);
-                debounceTimeout = setTimeout(() => {
-                    var searchTerm = $(this).val().toLowerCase();
-                    categoryBox.find('.categorychecklist li').each(function() {
-                        var text = $(this).text().toLowerCase();
-                        var checked = $(this).find('input[type="checkbox"]').is(':checked');
-                        $(this).toggle(text.includes(searchTerm) || checked);
-                    });
-                }, 300);
-            });
-
-            $('.clear-category-search').on('click', function() {
-                $('.category-search').val('');
-                categoryBox.find('.categorychecklist li').show();
-            });
-
-            // Add thumbnails
-            categoryBox.find('.categorychecklist li').each(function() {
-                var li = $(this);
-                var input = li.find('input[type="checkbox"]');
-                var catID = input.val();
-
-                $.ajax({
-                    url: ajaxurl,
-                    data: { action: 'get_wc_category_thumbnail', term_id: catID },
-                    type: 'POST',
-                    success: function(res) {
-                        if (res && res.url) {
-                            li.find('label').prepend('<img class="cat-thumb" src="' + res.url + '" alt="cat-thumb"/>');
-                        }
-                    }
+        var debounceTimeout;
+        $('.category-search').on('keyup', function() {
+            clearTimeout(debounceTimeout);
+            debounceTimeout = setTimeout(() => {
+                var searchTerm = $(this).val().toLowerCase();
+                categoryBox.find('.categorychecklist li').each(function() {
+                    var text = $(this).text().toLowerCase();
+                    var checked = $(this).find('input[type="checkbox"]').is(':checked');
+                    $(this).toggle(text.includes(searchTerm) || checked);
                 });
+            }, 300);
+        });
+
+        $('.clear-category-search').on('click', function() {
+            $('.category-search').val('');
+            categoryBox.find('.categorychecklist li').show();
+        });
+
+        // Add thumbnails
+        categoryBox.find('.categorychecklist li').each(function() {
+            var li = $(this);
+            var input = li.find('input[type="checkbox"]');
+            var catID = input.val();
+
+            $.ajax({
+                url: ajaxurl,
+                data: { action: 'get_wc_category_thumbnail', term_id: catID },
+                type: 'POST',
+                success: function(res) {
+                    if (res && res.url) {
+                        li.find('label').prepend('<img class="cat-thumb" src="' + res.url + '" alt="cat-thumb"/>');
+                    }
+                }
             });
         });
+    });
     </script>
     <?php
 }
 
-// Add search + thumbnails to Quick Edit
+// ========== Quick Edit: Category Search ==========
 add_action('admin_footer', 'wc_cat_search_thumbnail_quick_edit');
 function wc_cat_search_thumbnail_quick_edit() {
     $screen = get_current_screen();
@@ -102,11 +102,10 @@ function wc_cat_search_thumbnail_quick_edit() {
     <?php
 }
 
-// Handle AJAX thumbnail fetch
+// ========== AJAX: Get Category Thumbnail ==========
 add_action('wp_ajax_get_wc_category_thumbnail', function() {
     $term_id = absint($_POST['term_id']);
     $thumb_id = get_term_meta($term_id, 'thumbnail_id', true);
     $image_url = wp_get_attachment_url($thumb_id);
     wp_send_json(['url' => $image_url]);
 });
-
